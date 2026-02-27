@@ -14,6 +14,7 @@ services:
       - tazama_default
 
   connection-studio-backend:
+    container_name: tcs-backend
     image: !reset null
     build:
       context: https://github.com/tazama-lf/connection-studio.git#${TCS_BRANCH}:backend

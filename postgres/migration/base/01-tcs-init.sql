@@ -1,3 +1,5 @@
+CREATE DATABASE enrichment;
+
 \connect configuration;
 
 CREATE TABLE destination (
@@ -68,7 +70,7 @@ INSERT INTO destination_type_fields (field_id, name, field_type, parent_id, seri
 (24, 'amt', 'number', 8, 12, 2, 'default'),
 (25, 'ccy', 'string', 8, 13, 2, 'default');
 
-CREATE TABLE config (
+CREATE TABLE tcs_config (
     id SERIAL PRIMARY KEY,
     msg_fam VARCHAR(255) NOT NULL,
     transaction_type VARCHAR(255) NOT NULL,
@@ -84,7 +86,8 @@ CREATE TABLE config (
     status VARCHAR(255) NOT NULL DEFAULT 'inprogress',
     functions JSONB,
     publishing_status VARCHAR(8) DEFAULT 'active',
-    comments TEXT
+    comments TEXT,
+    related_transaction TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tcs_cron_jobs (
