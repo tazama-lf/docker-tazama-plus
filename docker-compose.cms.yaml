@@ -1,0 +1,86 @@
+services:
+  migrate:
+    container_name: cms-migrations
+    build:
+      context: https://github.com/tazama-lf/case-management-system.git#${CMS_BRANCH}:backend
+      args:
+        - GH_TOKEN
+      target: migrate
+    env_file:
+      - .env
+      - ./env/cms.env
+    command: sh /home/app/migrate.sh
+    networks:
+      - tazama_default
+
+  couchdb:
+    image: couchdb:3.3
+    container_name: tazama-cms-couchdb
+    restart: unless-stopped
+    env_file:
+      - ./env/cms.env
+    ports:
+      - "${COUCHDB_PORT}:5984"
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+      - ./postgres/migration/couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
+    networks:
+      - tazama_default
+
+  flowable:
+    image: flowable/flowable-rest:latest
+    container_name: tazama-cms-flowable
+    restart: unless-stopped
+    depends_on:
+      - migrate
+    env_file:
+      - ./env/cms.env
+    ports:
+      - "${FLOWABLE_PORT}:8080"
+    networks:
+      - tazama_default
+
+  backend:
+    image: tazama-cms-backend
+    build:
+      context: https://github.com/tazama-lf/case-management-system.git#${CMS_BRANCH}:backend
+      args:
+        - GH_TOKEN
+      target: run-env
+    container_name: tazama-cms-backend
+    restart: unless-stopped
+    depends_on:
+      - migrate
+      - flowable
+    env_file:
+      - ./env/cms.env
+      - .env
+    volumes:
+      - ./auth/public-key.pem:/auth/public-key.pem:ro
+    ports:
+      - "${CMS_BACKEND_PORT}:3090"
+    networks:
+      - tazama_default
+
+  frontend:
+    image: tazama-cms-frontend
+    build:
+      context: https://github.com/tazama-lf/case-management-system.git#${CMS_BRANCH}:frontend
+      args:
+        - GH_TOKEN
+    container_name: tazama-cms-frontend
+    restart: unless-stopped
+    env_file:
+      - ./env/cms.env
+      - .env
+    ports:
+      - "${CMS_FRONTEND_PORT}:5173"
+    networks:
+      - tazama_default
+
+volumes:
+  couchdb_data:
+
+networks:
+  tazama_default:
+    external: true
