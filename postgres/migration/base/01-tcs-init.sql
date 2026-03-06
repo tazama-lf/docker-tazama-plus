@@ -87,6 +87,8 @@ CREATE TABLE tcs_config (
     functions JSONB,
     publishing_status VARCHAR(8) DEFAULT 'active',
     comments TEXT,
+    payload_json JSONB,
+    payload_xml xml,
     related_transaction TEXT
 );
 

@@ -30,12 +30,14 @@ services:
       - sftp
     networks:
       - tazama_default
-  
+    volumes:
+      - auth_data:/auth
+      - ./auth:/auth:ro
   connection-studio-frontend:
     container_name: tcs-frontend
     image: !reset null
     build:
-      context: https://github.com/tazama-lf/connection-studio.git#${TCS_FRONTEND_BRANCH}:frontend
+      context: https://github.com/tazama-lf/connection-studio.git#${TCS_BRANCH}:frontend
       args:
         - GH_TOKEN
     env_file:
@@ -49,9 +51,9 @@ services:
     networks:
       - tazama_default
 
-
 volumes:
   sftp_data:
+  auth_data:
 
 networks:
   tazama_default:

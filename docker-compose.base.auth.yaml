@@ -48,7 +48,7 @@ services:
     volumes:
       - ./auth/test-public-key.pem:/home/app/test-public-key.pem
 
-  # ADMIN SERVICE API      
+  # ADMIN SERVICE API
   admin-service:
     environment:
       - AUTHENTICATED=true

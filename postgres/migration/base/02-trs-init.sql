@@ -16,21 +16,25 @@ CREATE TABLE public.trs_rule_flow (
 );
 CREATE INDEX idx_trs_rule_flow_rule_id ON trs_rule_flow (rule_id);
 
-CREATE TABLE trs_rules (
-    rule_id SERIAL,
-    rule_name VARCHAR(100),
-    description VARCHAR(255) NOT NULL,
-    tenant_id VARCHAR(255) NOT NULL,
-    txtp VARCHAR(50) NOT NULL,
-    version VARCHAR(50) NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    publishing_status VARCHAR(255) NOT NULL,
-    updated_by VARCHAR(255) NOT NULL,
-    updated_at DATE,
-    created_at DATE,
-    flow_id INTEGER,
-    PRIMARY KEY (rule_id, tenant_id, version),
-    CONSTRAINT fk_trs_rules_flow_id FOREIGN KEY (flow_id) REFERENCES trs_rule_flow(id)
+CREATE TABLE public.trs_rules (
+	id serial4 NOT NULL,
+	rule_name varchar(100) NULL,
+	rule_type varchar(100) NULL,
+	rule_config_id varchar(30) NULL,
+	description varchar(255) NOT NULL,
+	tenant_id varchar(255) NOT NULL,
+	txtp varchar(50) NOT NULL,
+	"version" varchar(50) NOT NULL,
+	status varchar(50) NOT NULL,
+	publishing_status varchar(255) NOT NULL,
+	updated_by varchar(255) NOT NULL,
+	updated_at timestamp NULL,
+	created_at timestamp NULL,
+	rulerequest jsonb DEFAULT '{}'::jsonb NULL,
+	txtp_version varchar(50) NULL,
+	"comments" varchar(50) NULL,
+	metadata jsonb DEFAULT '{"sync": true, "test": false, "deploy": false, "simulation": false}'::jsonb NULL,
+	CONSTRAINT trs_rules_pkey PRIMARY KEY (id, tenant_id, version)
 );
 
 -- Index on tenant_id for faster retrieval of rules by tenant
