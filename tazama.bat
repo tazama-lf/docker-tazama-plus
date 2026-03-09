@@ -11,6 +11,11 @@ set "relay=[ ]"
 set "ui=[ ]"
 set "natsutils=[ ]"
 set "batchppa=[ ]"
+set "cms=[ ]"
+set "trs=[ ]"
+set "tcs=[ ]"
+set "deapi_dems=[ ]"
+set "opensearch=[ ]"
 rem These options default to enabled
 set "pgadmin=[X]"
 set "hasura=[X]"
@@ -99,19 +104,58 @@ echo 5. %natsutils% NATS Utilities
 echo 6. %batchppa% Batch PPA
 echo 7. %pgadmin% pgAdmin for PostgreSQL
 echo 8. %hasura% Hasura GraphQL API for PostgreSQL
+if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    echo.
+    echo GITHUB EXTENDED ADDONS ^(AUTH REQUIRED^):
+    echo.
+    echo 9.  %cms% CMS
+    echo 10. %trs% TRS
+    echo 11. %tcs% TCS
+    echo 12. %deapi_dems% DEAPI ^& DEMS
+    echo 13. %opensearch% OpenSearch
+)
 echo.
-echo Toggle addons (1-8), (a)pply current selection, (r)eturn, or (q)uit
+if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    echo Toggle addons (1-13), (a)pply current selection, (r)eturn, or (q)uit
+) else (
+    echo Toggle addons (1-8), (a)pply current selection, (r)eturn, or (q)uit
+)
 set /p "choice=Enter your choice: "
 
 if /i "%choice%"=="a" goto :apply
 if /i "%choice%"=="r" goto :menu
 if /i "%choice%"=="q" goto :quit
 
+set "auth_required=0"
+if "%cms%"=="[X]" set "auth_required=1"
+if "%trs%"=="[X]" set "auth_required=1"
+if "%tcs%"=="[X]" set "auth_required=1"
+if "%deapi_dems%"=="[X]" set "auth_required=1"
+if "%opensearch%"=="[X]" set "auth_required=1"
+
 rem If multitenant, can't unset auth or relay...
-if "%choice%"=="1" if %IS_MULTITENANT_DEPLOYMENT% NEQ 1 if "%auth%" == "[ ]" (set "auth=[X]") else (set "auth=[ ]")
+if "%choice%"=="1" (
+    if %IS_MULTITENANT_DEPLOYMENT% NEQ 1 (
+        if "%auth%" == "[X]" if "%auth_required%"=="1" (
+            echo.
+            echo Authentication is required while CMS/TRS/TCS/DEAPI^&DEMS/OpenSearch is enabled.
+            echo.
+            timeout /t 1 >nul
+        ) else (
+            if "%auth%" == "[ ]" (set "auth=[X]") else (set "auth=[ ]")
+        )
+    )
+)
 if "%choice%"=="2" if %IS_MULTITENANT_DEPLOYMENT% NEQ 1 if "%relay%" == "[ ]" (set "relay=[X]") else (set "relay=[ ]")
 if "%choice%"=="3" if "%basiclogs%" == "[ ]" (set "basiclogs=[X]") else (set "basiclogs=[ ]")
 if "%choice%"=="4" if %IS_MULTITENANT_DEPLOYMENT% NEQ 1 if "%ui%" == "[ ]" (
+    if "%auth_required%"=="1" (
+        echo.
+        echo Demo UI cannot be enabled while CMS/TRS/TCS/DEAPI^&DEMS/OpenSearch is selected because those require Authentication.
+        echo.
+        timeout /t 2 >nul
+        goto :addons
+    )
     rem If enabling UI, disable auth and relay
     set "ui=[X]"
     set "auth=[ ]"
@@ -126,10 +170,142 @@ if "%choice%"=="5" if "%natsutils%" == "[ ]" (set "natsutils=[X]") else (set "na
 if "%choice%"=="6" if "%batchppa%" == "[ ]" (set "batchppa=[X]") else (set "batchppa=[ ]")
 if "%choice%"=="7" if "%pgadmin%" == "[ ]" (set "pgadmin=[X]") else (set "pgadmin=[ ]")
 if "%choice%"=="8" if "%hasura%" == "[ ]" (set "hasura=[X]") else (set "hasura=[ ]")
+if "%choice%"=="9" (
+    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+        if "%cms%" == "[ ]" (set "cms=[X]") else (set "cms=[ ]")
+        if "%cms%"=="[X]" (
+            set "auth=[X]"
+            set "opensearch=[X]"
+        )
+    ) else (
+        echo.
+        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo.
+        timeout /t 1 >nul
+    )
+)
+if "%choice%"=="10" (
+    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+        if "%trs%" == "[ ]" (set "trs=[X]") else (set "trs=[ ]")
+        if "%trs%"=="[X]" (
+            set "auth=[X]"
+            set "opensearch=[X]"
+        )
+    ) else (
+        echo.
+        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo.
+        timeout /t 1 >nul
+    )
+)
+if "%choice%"=="11" (
+    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+        if "%tcs%" == "[ ]" (
+            set "tcs=[X]"
+            set "deapi_dems=[X]"
+            set "opensearch=[X]"
+            set "auth=[X]"
+            echo.
+            echo TCS requires DEAPI ^& DEMS, OpenSearch, and Authentication. All were enabled automatically.
+            echo.
+            timeout /t 1 >nul
+        ) else (
+            set "tcs=[ ]"
+        )
+    ) else (
+        echo.
+        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo.
+        timeout /t 1 >nul
+    )
+)
+if "%choice%"=="12" (
+    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+        if "%deapi_dems%" == "[X]" if "%tcs%" == "[X]" (
+            echo.
+            echo DEAPI ^& DEMS cannot be disabled while TCS is enabled.
+            echo.
+            timeout /t 1 >nul
+        ) else (
+            if "%deapi_dems%" == "[ ]" (set "deapi_dems=[X]") else (set "deapi_dems=[ ]")
+            if "%deapi_dems%"=="[X]" set "auth=[X]"
+        )
+    ) else (
+        echo.
+        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo.
+        timeout /t 1 >nul
+    )
+)
+if "%choice%"=="13" (
+    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+        if "%opensearch%" == "[X]" if "%cms%" == "[X]" (
+            echo.
+            echo OpenSearch cannot be disabled while CMS/TRS/TCS is enabled.
+            echo.
+            timeout /t 1 >nul
+        ) else if "%opensearch%" == "[X]" if "%trs%" == "[X]" (
+            echo.
+            echo OpenSearch cannot be disabled while CMS/TRS/TCS is enabled.
+            echo.
+            timeout /t 1 >nul
+        ) else if "%opensearch%" == "[X]" if "%tcs%" == "[X]" (
+            echo.
+            echo OpenSearch cannot be disabled while CMS/TRS/TCS is enabled.
+            echo.
+            timeout /t 1 >nul
+        ) else (
+            if "%opensearch%" == "[ ]" (set "opensearch=[X]") else (set "opensearch=[ ]")
+            if "%opensearch%"=="[X]" set "auth=[X]"
+        )
+    ) else (
+        echo.
+        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo.
+        timeout /t 1 >nul
+    )
+)
 
 goto :addons
 
 :apply
+set "auth_required=0"
+if "%cms%"=="[X]" set "auth_required=1"
+if "%trs%"=="[X]" set "auth_required=1"
+if "%tcs%"=="[X]" set "auth_required=1"
+if "%deapi_dems%"=="[X]" set "auth_required=1"
+if "%opensearch%"=="[X]" set "auth_required=1"
+if "%tcs%"=="[X]" if "%deapi_dems%"=="[ ]" (
+    echo.
+    echo TCS requires DEAPI ^& DEMS. Enabling DEAPI ^& DEMS automatically.
+    echo.
+    set "deapi_dems=[X]"
+)
+if "%cms%"=="[X]" if "%opensearch%"=="[ ]" (
+    echo.
+    echo CMS/TRS/TCS require OpenSearch. Enabling OpenSearch automatically.
+    echo.
+    set "opensearch=[X]"
+)
+if "%trs%"=="[X]" if "%opensearch%"=="[ ]" (
+    echo.
+    echo CMS/TRS/TCS require OpenSearch. Enabling OpenSearch automatically.
+    echo.
+    set "opensearch=[X]"
+)
+if "%tcs%"=="[X]" if "%opensearch%"=="[ ]" (
+    echo.
+    echo CMS/TRS/TCS require OpenSearch. Enabling OpenSearch automatically.
+    echo.
+    set "opensearch=[X]"
+)
+if "%auth_required%"=="1" if "%auth%"=="[ ]" (
+    echo.
+    echo Authentication is required for CMS/TRS/TCS/DEAPI^&DEMS/OpenSearch. Enabling Authentication automatically.
+    echo.
+    set "auth=[X]"
+)
+
 rem Base command for all options
 set "cmd=docker compose -f docker-compose.base.infrastructure.yaml -f docker-compose.base.override.yaml"
 
@@ -189,6 +365,14 @@ if "%natsutils%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.nats-utils.yaml
 if "%batchppa%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.batch-ppa.yaml"
 if "%pgadmin%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.pgadmin.yaml"
 if "%hasura%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.hasura.yaml"
+
+if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    if "%cms%" == "[X]" set "cmd=!cmd! -f docker-compose.cms.yaml"
+    if "%trs%" == "[X]" set "cmd=!cmd! -f docker-compose.trs.yaml"
+    if "%tcs%" == "[X]" set "cmd=!cmd! -f docker-compose.tcs.yaml"
+    if "%deapi_dems%" == "[X]" set "cmd=!cmd! -f docker-compose-deapi-dems.yaml"
+    if "%opensearch%" == "[X]" set "cmd=!cmd! -f docker-compose.opensearch.yaml"
+)
 
 echo.
 echo Command to run: !cmd! -p tazama up -d

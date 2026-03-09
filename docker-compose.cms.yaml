@@ -78,7 +78,20 @@ services:
     networks:
       - tazama_default
 
-  # Add viola too 
+  viola:
+    image: tazama-cms-viola
+    build:
+      context: https://github.com/tazama-lf/case-management-system.git#${CMS_BRANCH}
+      dockerfile: Dockerfile.viola
+    container_name: tazama-cms-viola
+    restart: unless-stopped
+    env_file:
+      - ./env/cms.env
+      - .env
+    ports:
+      - "${VIOLA_PORT}:8866"
+    networks:
+      - tazama_default
 
 volumes:
   couchdb_data:

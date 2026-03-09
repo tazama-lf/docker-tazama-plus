@@ -26,6 +26,11 @@ relay="[ ]"
 ui="[ ]"
 natsutils="[ ]"
 batchppa="[ ]"
+cms="[ ]"
+trs="[ ]"
+tcs="[ ]"
+deapi_dems="[ ]"
+opensearch="[ ]"
 # These options default to enabled
 pgadmin="[X]"
 hasura="[X]"
@@ -44,6 +49,16 @@ toggle_addon() {
     else
         eval "$addon_name='[ ]'"
     fi
+}
+
+# Auth is required for selected extended addons
+has_auth_required_addons_enabled() {
+    [[ "$cms" == "[X]" || "$trs" == "[X]" || "$tcs" == "[X]" || "$deapi_dems" == "[X]" || "$opensearch" == "[X]" ]]
+}
+
+# OpenSearch is required for selected extended addons
+has_opensearch_required_addons_enabled() {
+    [[ "$cms" == "[X]" || "$trs" == "[X]" || "$tcs" == "[X]" ]]
 }
 
 # Main menu
@@ -84,8 +99,22 @@ show_addons_menu() {
     echo "6. $batchppa Batch PPA"
     echo "7. $pgadmin pgAdmin for PostgreSQL"
     echo "8. $hasura Hasura GraphQL API for PostgreSQL"
+    if [[ $IS_GITHUB_DEPLOYMENT -eq 1 ]]; then
+        echo ""
+        print_color $CYAN "GITHUB EXTENDED ADDONS (AUTH REQUIRED):"
+        echo ""
+        echo "9.  $cms CMS"
+        echo "10. $trs TRS"
+        echo "11. $tcs TCS"
+        echo "12. $deapi_dems DEAPI & DEMS"
+        echo "13. $opensearch OpenSearch"
+    fi
     echo ""
-    echo "Toggle addons (1-8), (a)pply current selection, (r)eturn, or (q)uit"
+    if [[ $IS_GITHUB_DEPLOYMENT -eq 1 ]]; then
+        echo "Toggle addons (1-13), (a)pply current selection, (r)eturn, or (q)uit"
+    else
+        echo "Toggle addons (1-8), (a)pply current selection, (r)eturn, or (q)uit"
+    fi
 }
 
 # Build docker compose command
@@ -147,12 +176,36 @@ build_docker_command() {
     [[ "$batchppa" == "[X]" ]] && cmd="$cmd -f docker-compose.utils.batch-ppa.yaml"
     [[ "$pgadmin" == "[X]" ]] && cmd="$cmd -f docker-compose.utils.pgadmin.yaml"
     [[ "$hasura" == "[X]" ]] && cmd="$cmd -f docker-compose.utils.hasura.yaml"
+
+    # GitHub-only extended addons
+    if [[ $IS_GITHUB_DEPLOYMENT -eq 1 ]]; then
+        [[ "$cms" == "[X]" ]] && cmd="$cmd -f docker-compose.cms.yaml"
+        [[ "$trs" == "[X]" ]] && cmd="$cmd -f docker-compose.trs.yaml"
+        [[ "$tcs" == "[X]" ]] && cmd="$cmd -f docker-compose.tcs.yaml"
+        [[ "$deapi_dems" == "[X]" ]] && cmd="$cmd -f docker-compose-deapi-dems.yaml"
+        [[ "$opensearch" == "[X]" ]] && cmd="$cmd -f docker-compose.opensearch.yaml"
+    fi
     
     echo "$cmd"
 }
 
 # Apply configuration and deploy
 apply_configuration() {
+    if [[ "$tcs" == "[X]" && "$deapi_dems" != "[X]" ]]; then
+        print_color $YELLOW "TCS requires DEAPI & DEMS. Enabling DEAPI & DEMS automatically."
+        deapi_dems="[X]"
+    fi
+
+    if has_opensearch_required_addons_enabled && [[ "$opensearch" != "[X]" ]]; then
+        print_color $YELLOW "CMS/TRS/TCS require OpenSearch. Enabling OpenSearch automatically."
+        opensearch="[X]"
+    fi
+
+    if has_auth_required_addons_enabled && [[ "$auth" != "[X]" ]]; then
+        print_color $YELLOW "Authentication is required for CMS/TRS/TCS/DEAPI&DEMS/OpenSearch. Enabling Authentication automatically."
+        auth="[X]"
+    fi
+
     local cmd=$(build_docker_command)
     
     echo ""
@@ -271,7 +324,12 @@ while true; do
                         exit 0
                         ;;
                     1)
-                        [[ $IS_MULTITENANT_DEPLOYMENT -ne 1 ]] && toggle_addon "auth"
+                        if has_auth_required_addons_enabled && [[ "$auth" == "[X]" ]]; then
+                            print_color $YELLOW "Authentication is required while CMS/TRS/TCS/DEAPI&DEMS/OpenSearch is enabled."
+                            sleep 1
+                        else
+                            [[ $IS_MULTITENANT_DEPLOYMENT -ne 1 ]] && toggle_addon "auth"
+                        fi
                         ;;
                     2)
                         [[ $IS_MULTITENANT_DEPLOYMENT -ne 1 ]] && toggle_addon "relay"
@@ -279,6 +337,11 @@ while true; do
                     3) toggle_addon "basiclogs" ;;
                     4) 
                         if [[ $IS_MULTITENANT_DEPLOYMENT -ne 1 ]]; then
+                            if [[ "$ui" == "[ ]" ]] && has_auth_required_addons_enabled; then
+                                print_color $YELLOW "Demo UI cannot be enabled while CMS/TRS/TCS/DEAPI&DEMS/OpenSearch is selected because those require Authentication."
+                                sleep 2
+                                continue
+                            fi
                             if [[ "$ui" == "[ ]" ]]; then
                                 ui="[X]"
                                 auth="[ ]"
@@ -297,6 +360,50 @@ while true; do
                     6) toggle_addon "batchppa" ;;
                     7) toggle_addon "pgadmin" ;;
                     8) toggle_addon "hasura" ;;
+                    9)
+                        toggle_addon "cms"
+                        if [[ "$cms" == "[X]" ]]; then
+                            auth="[X]"
+                            opensearch="[X]"
+                        fi
+                        ;;
+                    10)
+                        toggle_addon "trs"
+                        if [[ "$trs" == "[X]" ]]; then
+                            auth="[X]"
+                            opensearch="[X]"
+                        fi
+                        ;;
+                    11)
+                        if [[ "$tcs" == "[ ]" ]]; then
+                            tcs="[X]"
+                            deapi_dems="[X]"
+                            auth="[X]"
+                            opensearch="[X]"
+                            print_color $YELLOW "TCS requires DEAPI & DEMS, OpenSearch, and Authentication. All were enabled automatically."
+                            sleep 1
+                        else
+                            tcs="[ ]"
+                        fi
+                        ;;
+                    12)
+                        if [[ "$deapi_dems" == "[X]" && "$tcs" == "[X]" ]]; then
+                            print_color $YELLOW "DEAPI & DEMS cannot be disabled while TCS is enabled."
+                            sleep 1
+                        else
+                            toggle_addon "deapi_dems"
+                            [[ "$deapi_dems" == "[X]" ]] && auth="[X]"
+                        fi
+                        ;;
+                    13)
+                        if [[ "$opensearch" == "[X]" ]] && has_opensearch_required_addons_enabled; then
+                            print_color $YELLOW "OpenSearch cannot be disabled while CMS/TRS/TCS is enabled."
+                            sleep 1
+                        else
+                            toggle_addon "opensearch"
+                            [[ "$opensearch" == "[X]" ]] && auth="[X]"
+                        fi
+                        ;;
                     *)
                         print_color $RED "Invalid choice."
                         sleep 1
@@ -322,10 +429,22 @@ while true; do
                         ;;
                     r|R) break ;;
                     q|Q) exit 0 ;;
-                    1) toggle_addon "auth" ;;
+                    1)
+                        if has_auth_required_addons_enabled && [[ "$auth" == "[X]" ]]; then
+                            print_color $YELLOW "Authentication is required while CMS/TRS/TCS/DEAPI&DEMS/OpenSearch is enabled."
+                            sleep 1
+                        else
+                            toggle_addon "auth"
+                        fi
+                        ;;
                     2) toggle_addon "relay" ;;
                     3) toggle_addon "basiclogs" ;;
                     4) 
+                        if [[ "$ui" == "[ ]" ]] && has_auth_required_addons_enabled; then
+                            print_color $YELLOW "Demo UI cannot be enabled while CMS/TRS/TCS/DEAPI&DEMS/OpenSearch is selected because those require Authentication."
+                            sleep 2
+                            continue
+                        fi
                         if [[ "$ui" == "[ ]" ]]; then
                             ui="[X]"
                             auth="[ ]"
@@ -343,6 +462,10 @@ while true; do
                     6) toggle_addon "batchppa" ;;
                     7) toggle_addon "pgadmin" ;;
                     8) toggle_addon "hasura" ;;
+                    9|10|11|12|13)
+                        print_color $YELLOW "These addons are currently available only for Public (GitHub) deployment."
+                        sleep 1
+                        ;;
                     *)
                         print_color $RED "Invalid choice."
                         sleep 1
@@ -368,10 +491,22 @@ while true; do
                         ;;
                     r|R) break ;;
                     q|Q) exit 0 ;;
-                    1) toggle_addon "auth" ;;
+                    1)
+                        if has_auth_required_addons_enabled && [[ "$auth" == "[X]" ]]; then
+                            print_color $YELLOW "Authentication is required while CMS/TRS/TCS/DEAPI&DEMS/OpenSearch is enabled."
+                            sleep 1
+                        else
+                            toggle_addon "auth"
+                        fi
+                        ;;
                     2) toggle_addon "relay" ;;
                     3) toggle_addon "basiclogs" ;;
                     4) 
+                        if [[ "$ui" == "[ ]" ]] && has_auth_required_addons_enabled; then
+                            print_color $YELLOW "Demo UI cannot be enabled while CMS/TRS/TCS/DEAPI&DEMS/OpenSearch is selected because those require Authentication."
+                            sleep 2
+                            continue
+                        fi
                         if [[ "$ui" == "[ ]" ]]; then
                             ui="[X]"
                             auth="[ ]"
@@ -389,6 +524,10 @@ while true; do
                     6) toggle_addon "batchppa" ;;
                     7) toggle_addon "pgadmin" ;;
                     8) toggle_addon "hasura" ;;
+                    9|10|11|12|13)
+                        print_color $YELLOW "These addons are currently available only for Public (GitHub) deployment."
+                        sleep 1
+                        ;;
                     *)
                         print_color $RED "Invalid choice."
                         sleep 1
@@ -428,6 +567,10 @@ while true; do
                     6) toggle_addon "batchppa" ;;
                     7) toggle_addon "pgadmin" ;;
                     8) toggle_addon "hasura" ;;
+                    9|10|11|12|13)
+                        print_color $YELLOW "These addons are currently available only for Public (GitHub) deployment."
+                        sleep 1
+                        ;;
                     *)
                         print_color $RED "Invalid choice."
                         sleep 1
