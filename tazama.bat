@@ -116,9 +116,9 @@ if %IS_GITHUB_DEPLOYMENT% EQU 1 (
 )
 echo.
 if %IS_GITHUB_DEPLOYMENT% EQU 1 (
-    echo Toggle addons (1-13), (a)pply current selection, (r)eturn, or (q)uit
+    echo Toggle addons ^(1-13^), ^(a^)pply current selection, ^(r^)eturn, or ^(q^)uit
 ) else (
-    echo Toggle addons (1-8), (a)pply current selection, (r)eturn, or (q)uit
+    echo Toggle addons ^(1-8^), ^(a^)pply current selection, ^(r^)eturn, or ^(q^)uit
 )
 set /p "choice=Enter your choice: "
 
@@ -136,13 +136,17 @@ if "%opensearch%"=="[X]" set "auth_required=1"
 rem If multitenant, can't unset auth or relay...
 if "%choice%"=="1" (
     if %IS_MULTITENANT_DEPLOYMENT% NEQ 1 (
-        if "%auth%" == "[X]" if "%auth_required%"=="1" (
-            echo.
-            echo Authentication is required while CMS/TRS/TCS/DEAPI^&DEMS/OpenSearch is enabled.
-            echo.
-            timeout /t 1 >nul
+        if "%auth%" == "[X]" (
+            if "%auth_required%"=="1" (
+                echo.
+                echo Authentication is required while CMS/TRS/TCS/DEAPI^&DEMS/OpenSearch is enabled.
+                echo.
+                timeout /t 1 >nul
+            ) else (
+                set "auth=[ ]"
+            )
         ) else (
-            if "%auth%" == "[ ]" (set "auth=[X]") else (set "auth=[ ]")
+            set "auth=[X]"
         )
     )
 )
