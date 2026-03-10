@@ -66,4 +66,4 @@ volumes:
   opensearch-data2:
 networks:
   tazama_default:
-    external: true
+    name: tazama_network

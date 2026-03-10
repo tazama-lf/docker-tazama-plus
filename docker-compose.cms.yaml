@@ -98,4 +98,4 @@ volumes:
 
 networks:
   tazama_default:
-    external: true
+    name: tazama_network
