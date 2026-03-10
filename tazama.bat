@@ -87,6 +87,9 @@ if /i "%type%"=="7" (
 
 :addons
 set "choice="
+set "EXTENDED_AVAILABLE=0"
+if %IS_GITHUB_DEPLOYMENT% EQU 1 set "EXTENDED_AVAILABLE=1"
+if %IS_GITHUB_DEPLOYMENT% NEQ 1 if %IS_FULL_DEPLOYMENT% EQU 0 if %IS_MULTITENANT_DEPLOYMENT% EQU 0 set "EXTENDED_AVAILABLE=1"
 cls
 echo.
 echo Enable optional deployment configuration addons:
@@ -104,9 +107,9 @@ echo 5. %natsutils% NATS Utilities
 echo 6. %batchppa% Batch PPA
 echo 7. %pgadmin% pgAdmin for PostgreSQL
 echo 8. %hasura% Hasura GraphQL API for PostgreSQL
-if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+if %EXTENDED_AVAILABLE% EQU 1 (
     echo.
-    echo GITHUB EXTENDED ADDONS ^(AUTH REQUIRED^):
+    echo EXTENDED ADDONS ^(AUTH REQUIRED^):
     echo.
     echo 9.  %cms% CMS
     echo 10. %trs% TRS
@@ -115,7 +118,7 @@ if %IS_GITHUB_DEPLOYMENT% EQU 1 (
     echo 13. %opensearch% OpenSearch
 )
 echo.
-if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+if %EXTENDED_AVAILABLE% EQU 1 (
     echo Toggle addons ^(1-13^), ^(a^)pply current selection, ^(r^)eturn, or ^(q^)uit
 ) else (
     echo Toggle addons ^(1-8^), ^(a^)pply current selection, ^(r^)eturn, or ^(q^)uit
@@ -175,7 +178,7 @@ if "%choice%"=="6" if "%batchppa%" == "[ ]" (set "batchppa=[X]") else (set "batc
 if "%choice%"=="7" if "%pgadmin%" == "[ ]" (set "pgadmin=[X]") else (set "pgadmin=[ ]")
 if "%choice%"=="8" if "%hasura%" == "[ ]" (set "hasura=[X]") else (set "hasura=[ ]")
 if "%choice%"=="9" (
-    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    if %EXTENDED_AVAILABLE% EQU 1 (
         if "%cms%" == "[ ]" (set "cms=[X]") else (set "cms=[ ]")
         if "%cms%"=="[X]" (
             set "auth=[X]"
@@ -183,13 +186,13 @@ if "%choice%"=="9" (
         )
     ) else (
         echo.
-        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo These addons are currently available only for Public ^(GitHub/DockerHub^) deployment.
         echo.
         timeout /t 1 >nul
     )
 )
 if "%choice%"=="10" (
-    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    if %EXTENDED_AVAILABLE% EQU 1 (
         if "%trs%" == "[ ]" (set "trs=[X]") else (set "trs=[ ]")
         if "%trs%"=="[X]" (
             set "auth=[X]"
@@ -197,13 +200,13 @@ if "%choice%"=="10" (
         )
     ) else (
         echo.
-        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo These addons are currently available only for Public ^(GitHub/DockerHub^) deployment.
         echo.
         timeout /t 1 >nul
     )
 )
 if "%choice%"=="11" (
-    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    if %EXTENDED_AVAILABLE% EQU 1 (
         if "%tcs%" == "[ ]" (
             set "tcs=[X]"
             set "deapi_dems=[X]"
@@ -218,13 +221,13 @@ if "%choice%"=="11" (
         )
     ) else (
         echo.
-        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo These addons are currently available only for Public ^(GitHub/DockerHub^) deployment.
         echo.
         timeout /t 1 >nul
     )
 )
 if "%choice%"=="12" (
-    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    if %EXTENDED_AVAILABLE% EQU 1 (
         if "%deapi_dems%" == "[X]" if "%tcs%" == "[X]" (
             echo.
             echo DEAPI ^& DEMS cannot be disabled while TCS is enabled.
@@ -236,13 +239,13 @@ if "%choice%"=="12" (
         )
     ) else (
         echo.
-        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo These addons are currently available only for Public ^(GitHub/DockerHub^) deployment.
         echo.
         timeout /t 1 >nul
     )
 )
 if "%choice%"=="13" (
-    if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+    if %EXTENDED_AVAILABLE% EQU 1 (
         if "%opensearch%" == "[X]" if "%cms%" == "[X]" (
             echo.
             echo OpenSearch cannot be disabled while CMS/TRS/TCS is enabled.
@@ -264,7 +267,7 @@ if "%choice%"=="13" (
         )
     ) else (
         echo.
-        echo These addons are currently available only for Public ^(GitHub^) deployment.
+        echo These addons are currently available only for Public ^(GitHub/DockerHub^) deployment.
         echo.
         timeout /t 1 >nul
     )
@@ -370,7 +373,10 @@ if "%batchppa%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.batch-ppa.yaml"
 if "%pgadmin%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.pgadmin.yaml"
 if "%hasura%" == "[X]" set "cmd=!cmd! -f docker-compose.utils.hasura.yaml"
 
-if %IS_GITHUB_DEPLOYMENT% EQU 1 (
+set "EXTENDED_AVAILABLE=0"
+if %IS_GITHUB_DEPLOYMENT% EQU 1 set "EXTENDED_AVAILABLE=1"
+if %IS_GITHUB_DEPLOYMENT% NEQ 1 if %IS_FULL_DEPLOYMENT% EQU 0 if %IS_MULTITENANT_DEPLOYMENT% EQU 0 set "EXTENDED_AVAILABLE=1"
+if %EXTENDED_AVAILABLE% EQU 1 (
     if "%cms%" == "[X]" set "cmd=!cmd! -f docker-compose.cms.yaml"
     if "%trs%" == "[X]" set "cmd=!cmd! -f docker-compose.trs.yaml"
     if "%tcs%" == "[X]" set "cmd=!cmd! -f docker-compose.tcs.yaml"

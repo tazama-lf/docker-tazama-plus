@@ -39,6 +39,11 @@ IS_GITHUB_DEPLOYMENT=0
 IS_FULL_DEPLOYMENT=0
 IS_MULTITENANT_DEPLOYMENT=0
 
+# Extended addons are available in GitHub and Public (DockerHub) deployments.
+is_extended_addons_deployment() {
+    [[ $IS_GITHUB_DEPLOYMENT -eq 1 || ( $IS_FULL_DEPLOYMENT -eq 0 && $IS_MULTITENANT_DEPLOYMENT -eq 0 ) ]]
+}
+
 # Function to toggle addon
 toggle_addon() {
     local addon_name=$1
@@ -99,9 +104,9 @@ show_addons_menu() {
     echo "6. $batchppa Batch PPA"
     echo "7. $pgadmin pgAdmin for PostgreSQL"
     echo "8. $hasura Hasura GraphQL API for PostgreSQL"
-    if [[ $IS_GITHUB_DEPLOYMENT -eq 1 ]]; then
+    if is_extended_addons_deployment; then
         echo ""
-        print_color $CYAN "GITHUB EXTENDED ADDONS (AUTH REQUIRED):"
+        print_color $CYAN "EXTENDED ADDONS (AUTH REQUIRED):"
         echo ""
         echo "9.  $cms CMS"
         echo "10. $trs TRS"
@@ -110,7 +115,7 @@ show_addons_menu() {
         echo "13. $opensearch OpenSearch"
     fi
     echo ""
-    if [[ $IS_GITHUB_DEPLOYMENT -eq 1 ]]; then
+    if is_extended_addons_deployment; then
         echo "Toggle addons (1-13), (a)pply current selection, (r)eturn, or (q)uit"
     else
         echo "Toggle addons (1-8), (a)pply current selection, (r)eturn, or (q)uit"
@@ -177,8 +182,8 @@ build_docker_command() {
     [[ "$pgadmin" == "[X]" ]] && cmd="$cmd -f docker-compose.utils.pgadmin.yaml"
     [[ "$hasura" == "[X]" ]] && cmd="$cmd -f docker-compose.utils.hasura.yaml"
 
-    # GitHub-only extended addons
-    if [[ $IS_GITHUB_DEPLOYMENT -eq 1 ]]; then
+    # Extended addons for GitHub and Public (DockerHub)
+    if is_extended_addons_deployment; then
         [[ "$cms" == "[X]" ]] && cmd="$cmd -f docker-compose.cms.yaml"
         [[ "$trs" == "[X]" ]] && cmd="$cmd -f docker-compose.trs.yaml"
         [[ "$tcs" == "[X]" ]] && cmd="$cmd -f docker-compose.tcs.yaml"
@@ -462,9 +467,49 @@ while true; do
                     6) toggle_addon "batchppa" ;;
                     7) toggle_addon "pgadmin" ;;
                     8) toggle_addon "hasura" ;;
-                    9|10|11|12|13)
-                        print_color $YELLOW "These addons are currently available only for Public (GitHub) deployment."
-                        sleep 1
+                    9)
+                        toggle_addon "cms"
+                        if [[ "$cms" == "[X]" ]]; then
+                            auth="[X]"
+                            opensearch="[X]"
+                        fi
+                        ;;
+                    10)
+                        toggle_addon "trs"
+                        if [[ "$trs" == "[X]" ]]; then
+                            auth="[X]"
+                            opensearch="[X]"
+                        fi
+                        ;;
+                    11)
+                        if [[ "$tcs" == "[ ]" ]]; then
+                            tcs="[X]"
+                            deapi_dems="[X]"
+                            auth="[X]"
+                            opensearch="[X]"
+                            print_color $YELLOW "TCS requires DEAPI & DEMS, OpenSearch, and Authentication. All were enabled automatically."
+                            sleep 1
+                        else
+                            tcs="[ ]"
+                        fi
+                        ;;
+                    12)
+                        if [[ "$deapi_dems" == "[X]" && "$tcs" == "[X]" ]]; then
+                            print_color $YELLOW "DEAPI & DEMS cannot be disabled while TCS is enabled."
+                            sleep 1
+                        else
+                            toggle_addon "deapi_dems"
+                            [[ "$deapi_dems" == "[X]" ]] && auth="[X]"
+                        fi
+                        ;;
+                    13)
+                        if [[ "$opensearch" == "[X]" ]] && has_opensearch_required_addons_enabled; then
+                            print_color $YELLOW "OpenSearch cannot be disabled while CMS/TRS/TCS is enabled."
+                            sleep 1
+                        else
+                            toggle_addon "opensearch"
+                            [[ "$opensearch" == "[X]" ]] && auth="[X]"
+                        fi
                         ;;
                     *)
                         print_color $RED "Invalid choice."
