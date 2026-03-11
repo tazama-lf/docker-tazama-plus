@@ -10,8 +10,6 @@ services:
       - .env
       - ./env/cms.env
     command: sh /home/app/migrate.sh
-    networks:
-      - tazama_default
 
   couchdb:
     image: couchdb:3.3
@@ -24,8 +22,6 @@ services:
     volumes:
       - couchdb_data:/opt/couchdb/data
       - ./postgres/migration/couchdb/local.ini:/opt/couchdb/etc/local.d/local.ini
-    networks:
-      - tazama_default
 
   flowable:
     image: flowable/flowable-rest:latest
@@ -37,8 +33,6 @@ services:
       - ./env/cms.env
     ports:
       - "${FLOWABLE_PORT}:8080"
-    networks:
-      - tazama_default
 
   backend:
     image: tazama-cms-backend
@@ -56,11 +50,9 @@ services:
       - ./env/cms.env
       - .env
     volumes:
-      - ./auth/public-key.pem:/auth/public-key.pem:ro
+      - ./auth/test-public-key.pem:/auth/test-public-key.pem:ro
     ports:
       - "${CMS_BACKEND_PORT}:3090"
-    networks:
-      - tazama_default
 
   frontend:
     image: tazama-cms-frontend
@@ -75,8 +67,6 @@ services:
       - .env
     ports:
       - "${CMS_FRONTEND_PORT}:5173"
-    networks:
-      - tazama_default
 
   viola:
     image: tazama-cms-viola
@@ -90,12 +80,6 @@ services:
       - .env
     ports:
       - "${VIOLA_PORT}:8866"
-    networks:
-      - tazama_default
 
 volumes:
   couchdb_data:
-
-networks:
-  tazama_default:
-    name: tazama_network

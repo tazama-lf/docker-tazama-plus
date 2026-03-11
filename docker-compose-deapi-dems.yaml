@@ -12,8 +12,6 @@ services:
     restart: always
     ports:
       - ${DEMS_PORT}:3002
-    networks:
-      - tazama_default
 
   deapi:
     image: !reset null
@@ -28,9 +26,5 @@ services:
     restart: always
     ports:
       - ${DEAPI_PORT}:3001
-    networks:
-      - tazama_default
 
-networks:
-  tazama_default:
-    external: true
+

@@ -10,8 +10,6 @@ services:
     command: user:password:1001
     env_file:
       - ./.env
-    networks:
-      - tazama_default
 
   connection-studio-backend:
     container_name: tcs-backend
@@ -28,8 +26,6 @@ services:
       - ${TCS_PORT}:3010
     depends_on:
       - sftp
-    networks:
-      - tazama_default
     volumes:
       - auth_data:/auth
       - ./auth:/auth:ro
@@ -48,15 +44,10 @@ services:
       - ${TCS_FRONTEND_PORT}:5173
     depends_on:
       - sftp
-    networks:
-      - tazama_default
 
 volumes:
   sftp_data:
   auth_data:
 
-networks:
-  tazama_default:
-    name: tazama_network
 
 

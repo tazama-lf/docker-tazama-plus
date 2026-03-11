@@ -12,8 +12,6 @@ services:
     restart: always
     ports:
       - ${TRS_BACKEND_PORT}:3005
-    networks:
-      - tazama_default
     volumes:
       - auth_data:/auth
       - ./auth:/auth:ro
@@ -30,14 +28,9 @@ services:
     restart: always
     ports:
       - ${TRS_FRONTEND_PORT}:5174
-    networks:
-      - tazama_default
     
 volumes:
    auth_data:
 
-networks:
-  tazama_default:
-    name: tazama_network
 
 
