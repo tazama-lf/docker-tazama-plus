@@ -66,7 +66,7 @@ services:
       - ./env/cms.env
       - .env
     ports:
-      - "${CMS_FRONTEND_PORT}:5173"
+      - "${CMS_FRONTEND_PORT}:5175"
 
   viola:
     image: tazama-cms-viola
