@@ -1,5 +1,3 @@
-CREATE DATABASE enrichment;
-
 \connect configuration;
 
 CREATE SEQUENCE IF NOT EXISTS tazama_data_model_json_id_seq;
