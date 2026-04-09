@@ -11,11 +11,12 @@ CREATE TABLE IF NOT EXISTS tazama_data_model_json
     updated_at timestamp with time zone DEFAULT now(),
     CONSTRAINT tazama_data_model_json_pkey PRIMARY KEY (id),
     CONSTRAINT tazama_data_model_json_tenant_id_key UNIQUE (tenant_id)
-)
+);
 
-INSERT INTO tazama_data_model_json(id, tenant_id, data_model_json, created_at, updated_at) VALUES (1, 'DEFAULT', '{"redis": {"name": "", "evtId": "", "cdtrId": "", "dbtrId": "", "creDtTm": "", "currency": "", "instdAmt": {}, "xchgRate": 0, "cdtrAcctId": "", "dbtrAcctId": "", "intrBkSttlmAmt": {}}, "transactionDetails": {"Amt": 0, "Ccy": "", "lat": "", "TxTp": "", "long": "", "MsgId": "", "TxSts": "", "source": "", "CreDtTm": "", "TenantId": "", "EndToEndId": "", "destination": ""}}', NOW(), NOW());
+INSERT INTO tazama_data_model_json(id, tenant_id, data_model_json, created_at, updated_at) VALUES 
+(1, 'DEFAULT', '{"redis": {"name": "", "evtId": "", "cdtrId": "", "dbtrId": "", "creDtTm": "", "currency": "", "instdAmt": {}, "xchgRate": 0, "cdtrAcctId": "", "dbtrAcctId": "", "intrBkSttlmAmt": {}}, "transactionDetails": {"Amt": 0, "Ccy": "", "lat": "", "TxTp": "", "long": "", "MsgId": "", "TxSts": "", "source": "", "CreDtTm": "", "TenantId": "", "EndToEndId": "", "destination": ""}}', NOW(), NOW());
 
-CREATE TABLE tcs_config (
+CREATE TABLE IF NOT EXISTS tcs_config (
     id SERIAL PRIMARY KEY,
     msg_fam VARCHAR(255) NOT NULL,
     transaction_type VARCHAR(255) NOT NULL,
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS tcs_cron_jobs (
     CONSTRAINT cron_jobs_name_tenant_unique UNIQUE (name, tenant_id)
 );
 
-CREATE TABLE tcs_pull_jobs (
+CREATE TABLE IF NOT EXISTS tcs_pull_jobs (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     tenant_id character varying(100) NOT NULL,
     endpoint_name character varying(255) NOT NULL,
@@ -76,7 +77,7 @@ CREATE TABLE tcs_pull_jobs (
     CONSTRAINT tcs_pull_jobs_schedule_id_fkey FOREIGN KEY (schedule_id) REFERENCES public.tcs_cron_jobs(id) ON DELETE CASCADE
 );
 
-CREATE TABLE tcs_push_jobs (
+CREATE TABLE IF NOT EXISTS tcs_push_jobs (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     tenant_id character varying(100) NOT NULL,
     endpoint_name character varying(255) NOT NULL,
