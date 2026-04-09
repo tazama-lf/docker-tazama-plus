@@ -13,8 +13,8 @@ create table network_map (
     cfg text generated always as (configuration ->> 'cfg') stored,
     tenantId text generated always as (configuration ->> 'tenantId') stored,
     active boolean generated always as ((configuration ->> 'active')::boolean) stored,
-    creDtTm timestamptz generated always as ((configuration ->> 'creDtTm')::timestamptz) stored,
-    updDtTm timestamptz generated always as ((configuration ->> 'updDtTm')::timestamptz) stored,
+    creDtTm text generated always as (configuration ->> 'creDtTm') stored,
+    updDtTm text generated always as (configuration ->> 'updDtTm') stored,
     primary key (cfg, tenantId)
 );
 
@@ -29,8 +29,8 @@ create table typology (
     typologyId text generated always as (configuration ->> 'id') stored,
     typologyCfg text generated always as (configuration ->> 'cfg') stored,
     tenantId text generated always as (configuration ->> 'tenantId') stored,
-    creDtTm timestamptz generated always as ((configuration ->> 'creDtTm')::timestamptz) stored,
-    updDtTm timestamptz generated always as ((configuration ->> 'updDtTm')::timestamptz) stored,
+    creDtTm text generated always as (configuration ->> 'creDtTm') stored,
+    updDtTm text generated always as (configuration ->> 'updDtTm') stored,
     primary key (typologyId, typologyCfg, tenantId)
 );
 
@@ -42,8 +42,8 @@ create table rule (
     ruleId text generated always as (configuration ->> 'id') stored,
     ruleCfg text generated always as (configuration ->> 'cfg') stored,
     tenantId text generated always as (configuration ->> 'tenantId') stored,
-    creDtTm timestamptz generated always as ((configuration ->> 'creDtTm')::timestamptz) stored,
-    updDtTm timestamptz generated always as ((configuration ->> 'updDtTm')::timestamptz) stored,
+    creDtTm text generated always as (configuration ->> 'creDtTm') stored,
+    updDtTm text generated always as (configuration ->> 'updDtTm') stored,
     primary key (ruleId, ruleCfg, tenantId)
 );
 
@@ -54,7 +54,7 @@ create index idx_rule_upd_dt_tm on rule (updDtTm, tenantId);
 
 create table evaluation (
     evaluation jsonb not null,
-    creDtTm timestamptz generated always as ((evaluation ->> 'timestamp')::timestamptz ) stored,
+    creDtTm text generated always as (evaluation ->> 'timestamp') stored,
     messageId text generated always as ( evaluation -> 'transaction' -> 'FIToFIPmtSts' -> 'GrpHdr' ->> 'MsgId') stored,
     tenantId text generated always as (evaluation -> 'transaction' ->> 'TenantId') stored,
     constraint unique_msgid_evaluation unique (messageId, tenantId)
@@ -93,8 +93,8 @@ create table account_holder (
 create table condition (
     id varchar generated always as (condition ->> 'condId') stored,
     tenantId text generated always as (condition ->> 'tenantId') stored,
-    creDtTm timestamptz generated always as ((condition ->> 'creDtTm')::timestamptz) stored,
-    updDtTm timestamptz generated always as ((condition ->> 'updDtTm')::timestamptz) stored,
+    creDtTm text generated always as (condition ->> 'creDtTm') stored,
+    updDtTm text generated always as (condition ->> 'updDtTm') stored,
     condition jsonb not null,
     primary key (id, tenantId)
 );
@@ -184,17 +184,10 @@ create index idx_tr_dest_txtp_txsts_credttm on transaction (destination, txtp, t
 create table pacs002 (
     document jsonb not null,
     -- cast when querying
-    creDtTm text generated always as (
-        document -> 'FIToFIPmtSts' -> 'GrpHdr' ->> 'CreDtTm'
-    ) stored,
-    messageId text generated always as (
-        document -> 'FIToFIPmtSts' -> 'GrpHdr' ->> 'MsgId'
-    ) stored,
-    endToEndId text generated always as (
-        document -> 'FIToFIPmtSts' -> 'TxInfAndSts' ->> 'OrgnlEndToEndId'
-    ) stored,
-    tenantId text generated always as (
-        document ->> 'TenantId' ) stored,
+    creDtTm text generated always as (document -> 'FIToFIPmtSts' -> 'GrpHdr' ->> 'CreDtTm') stored,
+    messageId text generated always as (document -> 'FIToFIPmtSts' -> 'GrpHdr' ->> 'MsgId' ) stored,
+    endToEndId text generated always as (document -> 'FIToFIPmtSts' -> 'TxInfAndSts' ->> 'OrgnlEndToEndId') stored,
+    tenantId text generated always as (document ->> 'TenantId' ) stored,
     constraint unique_msgid_pacs002 unique (messageId, tenantId),
     constraint message_id_not_null check (messageId is not null),
     constraint cre_dt_tm check (creDtTm is not null),
@@ -205,23 +198,12 @@ create table pacs002 (
 create table pacs008 (
     document jsonb not null,
     -- cast when querying
-    creDtTm text generated always as (
-        document -> 'FIToFICstmrCdtTrf' -> 'GrpHdr' ->> 'CreDtTm'
-    ) stored,
-    messageId text generated always as (
-        document -> 'FIToFICstmrCdtTrf' -> 'GrpHdr' ->> 'MsgId'
-    ) stored,
-    endToEndId text generated always as (
-        document -> 'FIToFICstmrCdtTrf' -> 'CdtTrfTxInf' -> 'PmtId' ->> 'EndToEndId'
-    ) stored,
-    debtorAccountId text generated always as (
-        document -> 'FIToFICstmrCdtTrf' -> 'CdtTrfTxInf' -> 'DbtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id'
-    ) stored,
-    creditorAccountId text generated always as (
-        document -> 'FIToFICstmrCdtTrf' -> 'CdtTrfTxInf' -> 'CdtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id'
-    ) stored,
-    tenantId text generated always as (
-        document ->> 'TenantId' ) stored,
+    creDtTm text generated always as (document -> 'FIToFICstmrCdtTrf' -> 'GrpHdr' ->> 'CreDtTm') stored,
+    messageId text generated always as (document -> 'FIToFICstmrCdtTrf' -> 'GrpHdr' ->> 'MsgId') stored,
+    endToEndId text generated always as (document -> 'FIToFICstmrCdtTrf' -> 'CdtTrfTxInf' -> 'PmtId' ->> 'EndToEndId') stored,
+    debtorAccountId text generated always as (document -> 'FIToFICstmrCdtTrf' -> 'CdtTrfTxInf' -> 'DbtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id') stored,
+    creditorAccountId text generated always as (document -> 'FIToFICstmrCdtTrf' -> 'CdtTrfTxInf' -> 'CdtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id') stored,
+    tenantId text generated always as (document ->> 'TenantId' ) stored,
     constraint unique_msgid_e2eid_pacs008 unique (messageId, tenantId),
     constraint message_id_not_null check (messageId is not null),
     constraint cre_dt_tm check (creDtTm is not null),
@@ -240,23 +222,12 @@ create index idx_pacs008_credttm on pacs008 (creDtTm, tenantId);
 create table pain001 (
     document jsonb not null,
     -- cast when querying
-    creDtTm text generated always as (
-        document -> 'CstmrCdtTrfInitn' -> 'GrpHdr' ->> 'CreDtTm'
-    ) stored,
-    messageId text generated always as (
-        document -> 'CstmrCdtTrfInitn' -> 'GrpHdr' ->> 'MsgId'
-    ) stored,
-    endToEndId text generated always as (
-        document -> 'CstmrCdtTrfInitn' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'PmtId' ->> 'EndToEndId'
-    ) stored,
-    debtorAccountId text generated always as (
-        document -> 'CstmrCdtTrfInitn' -> 'PmtInf' -> 'DbtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id'
-    ) stored,
-    creditorAccountId text generated always as (
-        document -> 'CstmrCdtTrfInitn' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'CdtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id'
-    ) stored,
-    tenantId text generated always as (
-        document ->> 'TenantId' ) stored,
+    creDtTm text generated always as (document -> 'CstmrCdtTrfInitn' -> 'GrpHdr' ->> 'CreDtTm') stored,
+    messageId text generated always as (document -> 'CstmrCdtTrfInitn' -> 'GrpHdr' ->> 'MsgId' ) stored,
+    endToEndId text generated always as (document -> 'CstmrCdtTrfInitn' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'PmtId' ->> 'EndToEndId') stored,
+    debtorAccountId text generated always as (document -> 'CstmrCdtTrfInitn' -> 'PmtInf' -> 'DbtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id' ) stored,
+    creditorAccountId text generated always as (document -> 'CstmrCdtTrfInitn' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'CdtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id') stored,
+    tenantId text generated always as (document ->> 'TenantId' ) stored,
     constraint unique_msgid_e2eid_pain001 unique (messageId, tenantId),
     constraint message_id_not_null check (messageId is not null),
     constraint cre_dt_tm check (creDtTm is not null),
@@ -275,23 +246,12 @@ create index idx_pain001_credttm on pain001 (creDtTm, tenantId);
 create table pain013 (
     document jsonb not null,
     -- cast when querying
-    creDtTm text generated always as (
-        document -> 'CdtrPmtActvtnReq' -> 'GrpHdr' ->> 'CreDtTm'
-    ) stored,
-    messageId text generated always as (
-        document -> 'CdtrPmtActvtnReq' -> 'GrpHdr' ->> 'MsgId'
-    ) stored,
-    endToEndId text generated always as (
-        document -> 'CdtrPmtActvtnReq' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'PmtId' ->> 'EndToEndId'
-    ) stored,
-    debtorAccountId text generated always as (
-        document -> 'CdtrPmtActvtnReq' -> 'PmtInf' -> 'DbtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id'
-    ) stored,
-    creditorAccountId text generated always as (
-        document -> 'CdtrPmtActvtnReq' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'CdtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id'
-    ) stored,
-    tenantId text generated always as (
-        document ->> 'TenantId' ) stored,
+    creDtTm text generated always as (document -> 'CdtrPmtActvtnReq' -> 'GrpHdr' ->> 'CreDtTm') stored,
+    messageId text generated always as (document -> 'CdtrPmtActvtnReq' -> 'GrpHdr' ->> 'MsgId') stored,
+    endToEndId text generated always as (document -> 'CdtrPmtActvtnReq' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'PmtId' ->> 'EndToEndId' ) stored,
+    debtorAccountId text generated always as ( document -> 'CdtrPmtActvtnReq' -> 'PmtInf' -> 'DbtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id' ) stored,
+    creditorAccountId text generated always as (document -> 'CdtrPmtActvtnReq' -> 'PmtInf' -> 'CdtTrfTxInf' -> 'CdtrAcct' -> 'Id' -> 'Othr' -> 0 ->> 'Id') stored,
+    tenantId text generated always as (document ->> 'TenantId' ) stored,
     constraint unique_msgid_e2eid_pain013 unique (messageId, tenantId),
     constraint message_id_not_null check (messageId is not null),
     constraint cre_dt_tm check (creDtTm is not null),
