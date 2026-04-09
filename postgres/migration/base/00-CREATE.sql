@@ -6,6 +6,10 @@ create database raw_history;
 
 create database evaluation;
 
+CREATE database enrichment;
+
+
+
 \connect configuration;
 
 create table network_map (
