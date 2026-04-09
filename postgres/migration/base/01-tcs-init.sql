@@ -2,6 +2,8 @@ CREATE DATABASE enrichment;
 
 \connect configuration;
 
+CREATE SEQUENCE IF NOT EXISTS tazama_data_model_json_id_seq;
+
 CREATE TABLE IF NOT EXISTS tazama_data_model_json
 (
     id integer NOT NULL DEFAULT nextval('tazama_data_model_json_id_seq'::regclass),
