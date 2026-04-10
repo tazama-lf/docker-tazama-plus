@@ -244,6 +244,3 @@ values (
   "expression": ["Add", "v901at100at100", "v902at100at100"]
 }'
     );
-
-INSERT INTO tazama_data_model_json(id, tenant_id, data_model_json, created_at, updated_at) VALUES 
-(1, 'DEFAULT', '{"redis": {"name": "", "evtId": "", "cdtrId": "", "dbtrId": "", "creDtTm": "", "currency": "", "instdAmt": {}, "xchgRate": 0, "cdtrAcctId": "", "dbtrAcctId": "", "intrBkSttlmAmt": {}}, "transactionDetails": {"Amt": 0, "Ccy": "", "lat": "", "TxTp": "", "long": "", "MsgId": "", "TxSts": "", "source": "", "CreDtTm": "", "TenantId": "", "EndToEndId": "", "destination": ""}}', NOW(), NOW());
