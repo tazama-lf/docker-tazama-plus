@@ -13,6 +13,11 @@ CREATE TABLE IF NOT EXISTS tazama_data_model_json
     CONSTRAINT tazama_data_model_json_tenant_id_key UNIQUE (tenant_id)
 );
 
+
+INSERT INTO tazama_data_model_json(id, tenant_id, data_model_json, created_at, updated_at) VALUES 
+(1, 'DEFAULT', '{"redis": {"name": "", "evtId": "", "cdtrId": "", "dbtrId": "", "creDtTm": "", "currency": "", "instdAmt": {}, "xchgRate": 0, "cdtrAcctId": "", "dbtrAcctId": "", "intrBkSttlmAmt": {}}, "transactionDetails": {"Amt": 0, "Ccy": "", "lat": "", "TxTp": "", "long": "", "MsgId": "", "TxSts": "", "source": "", "CreDtTm": "", "TenantId": "", "EndToEndId": "", "destination": ""}}', NOW(), NOW());
+
+
 CREATE TABLE IF NOT EXISTS tcs_config (
     id SERIAL PRIMARY KEY,
     msg_fam VARCHAR(255) NOT NULL,
