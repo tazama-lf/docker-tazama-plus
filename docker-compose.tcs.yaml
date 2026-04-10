@@ -1,0 +1,53 @@
+services:
+  sftp:
+    image: atmoz/sftp
+    container_name: tazama-sftp-1
+    restart: unless-stopped
+    ports:
+      - 2222:22
+    volumes:
+      - sftp_data:/home/user/upload
+    command: user:password:1001
+    env_file:
+      - ./.env
+
+  connection-studio-backend:
+    container_name: tcs-backend
+    image: !reset null
+    build:
+      context: https://github.com/tazama-lf/connection-studio.git#${TCS_BRANCH}:backend
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/tcs.env
+      - .env
+    restart: always
+    ports:
+      - ${TCS_PORT}:3010
+    depends_on:
+      - sftp
+    volumes:
+      - auth_data:/auth
+      - ./auth:/auth:ro
+  connection-studio-frontend:
+    container_name: tcs-frontend
+    image: !reset null
+    build:
+      context: https://github.com/tazama-lf/connection-studio.git#${TCS_BRANCH}:frontend
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/tcs.env
+      - .env
+    restart: always
+    ports:
+      - ${TCS_FRONTEND_PORT}:5173
+    depends_on:
+      - sftp
+
+volumes:
+  sftp_data:
+  auth_data:
+
+
+

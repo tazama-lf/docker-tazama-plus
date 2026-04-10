@@ -1,0 +1,36 @@
+services:
+  trs-backend:
+    container_name: trs-backend
+    image: !reset null
+    build:
+      context: https://github.com/tazama-lf/rule-studio.git#${TRS_BRANCH_BACKEND}:backend
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/trs.env
+      - .env
+    restart: always
+    ports:
+      - ${TRS_BACKEND_PORT}:3005
+    volumes:
+      - auth_data:/auth
+      - ./auth:/auth:ro
+  trs-frontend:
+    container_name: trs-frontend
+    image: !reset null
+    build:
+      context: https://github.com/tazama-lf/rule-studio.git#${TRS_BRANCH_FRONTEND}:frontend
+      args:
+        - GH_TOKEN
+    env_file:
+      - env/trs.env
+      - .env
+    restart: always
+    ports:
+      - ${TRS_FRONTEND_PORT}:5174
+    
+volumes:
+   auth_data:
+
+
+
